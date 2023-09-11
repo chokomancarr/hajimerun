@@ -32,6 +32,15 @@ const is_mobile = (function() {
 })();
 const INPUT_NAME = is_mobile ? "TAP" : "Press SPACE";
 
+let highscore = (function() {
+    let s = document.cookie.split(";").map(v => v.trim()).find(v => v.startsWith("highscore="));
+    return (s === undefined) ? 0 : +s.substr(10);
+})();
+function hs_set() {
+    highscore = game_info.score;
+    document.cookie = "highscore=" + highscore.toString() + ";max-age=31536000";
+}
+
 /**
  * @param {string} url
  */
@@ -223,8 +232,12 @@ class Floor {
     }
 
     function game_stop() {
+        game_info.score = Math.floor(game_info.score);
         game_info.state = GAME_STATE.GAME_OVER;
         game_info.time_scale = 1;
+        if (game_info.score > highscore) {
+            hs_set();
+        }
     }
 
     /**
@@ -255,6 +268,12 @@ class Floor {
                 if (time % 2000 > 1000) {
                     ctx.font = "20px Courier new";
                     ctx.fillText(INPUT_NAME + " to jump", 450, 200);
+                }
+                
+                if (highscore > 0) {
+                    ctx.fillStyle = "#ff3";
+                    ctx.font = "20px Courier new";
+                    ctx.fillText("HS:" + highscore.toString().padStart(10, "0"), 450, 150);
                 }
 
                 if (space_pressed) {
@@ -302,6 +321,12 @@ class Floor {
                 ctx.font = "30px Courier new";
                 ctx.textAlign = 'left';
                 ctx.fillText(Math.floor(game_info.score).toString().padStart(10, "0"), 20, 40);
+                
+                if (highscore > 0) {
+                    ctx.fillStyle = "#ff3";
+                    ctx.font = "20px Courier new";
+                    ctx.fillText("HS:" + highscore.toString().padStart(10, "0"), 250, 40);
+                }
                 break;
             }
             case GAME_STATE.GAME_OVER: {
@@ -311,7 +336,12 @@ class Floor {
                 ctx.fillText("GAME OVER", 450, 100);
                 ctx.font = "20px Courier new";
 
-                ctx.fillText("SCORE: " + Math.floor(game_info.score).toString().padStart(10, "0"), 450, 150);
+                ctx.fillText("SCORE: " + game_info.score.toString().padStart(10, "0"), 450, 150);
+                if (game_info.score === highscore) {
+                    ctx.fillStyle = "#ff3";
+                    ctx.fillText("NEW HIGHSCORE!", 450, 170);
+                    ctx.fillStyle = "white";
+                }
                 if (time % 2000 > 1000) {
                     ctx.fillText(INPUT_NAME + " to return", 450, 200);
                 }
